@@ -3,6 +3,7 @@ PATH
   specs:
     anchor (0.1.0)
       sshkit (~> 1.21.2)
+      thor (~> 1.1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -15,10 +16,10 @@ GEM
     pry (0.13.1)
       coderay (~> 1.1)
       method_source (~> 1.0)
-    rake (13.0.3)
     sshkit (1.21.2)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
+    thor (1.1.0)
 
 PLATFORMS
   x86_64-darwin-20
@@ -26,7 +27,6 @@ PLATFORMS
 DEPENDENCIES
   anchor!
   pry (~> 0.13.1)
-  rake (~> 13.0)
 
 BUNDLED WITH
    2.2.3

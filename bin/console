@@ -3,5 +3,6 @@
 
 require 'bundler/setup'
 require 'anchor'
+require 'pry'
 
-Anchor::Thor::CLI.start(ARGV)
+Pry.start

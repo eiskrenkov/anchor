@@ -1,48 +1,37 @@
 # frozen_string_literal: true
 
-module CLI::Docker
-  TAG = :latest
-
-  class << self
-    # Building Docker Image using passed Dockerfile and tagging it with target host
-    #
-    # > docker build -t ghcr.io/OWNER/IMAGE_NAME:latest .
-    #
-    def build(dockerfile, options = {})
-      command = ['build', '-t', image, '-f', dockerfile]
-
-      unless options.empty?
-        args = options.map do |key, value|
-          "#{key}=#{value}"
+module Anchor
+  module CLI
+    module Docker
+      module Compose
+        class FileNotFound < StandardError
+          def initialize
+            super("Can't find Docker compose file")
+          end
         end
 
-        command.concat(['--build-arg', *args])
+        class << self
+          def build
+            docker_compose(:build)
+          end
+
+          def push
+            docker_compose(:push)
+          end
+
+          def file_path(filename)
+            File.join(Dir.pwd, filename).tap do |path|
+              raise FileNotFound unless File.exists?(path)
+            end
+          end
+
+          private
+
+          def docker_compose(*command, status_code: true)
+            Anchor::CLI.exec('docker-compose', *command, status_code: status_code)
+          end
+        end
       end
-
-      docker(*command, '.', status_code: true)
-    end
-
-    # Pushing image to the GitHub Package Registry
-    #
-    # > docker push ghcr.io/OWNER/IMAGE_NAME:latest
-    #
-    def push
-      docker('push', "#{image}:#{TAG}")
-    end
-
-    # Composed image name (ghcr.io/OWNER/IMAGE_NAME)
-    def image
-      @image ||= "#{configuration.image.host}/#{configuration.image.owner}/#{configuration.image.name}"
-    end
-
-    private
-
-    def configuration
-      @configuration ||= Configuration.docker
-    end
-
-    def docker(*command, status_code: false)
-      CLI.exec(:docker, *command, status_code: status_code)
     end
   end
 end
