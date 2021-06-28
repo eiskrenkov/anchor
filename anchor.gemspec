@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   # Anchor dependencies
   spec.add_dependency 'sshkit', '~> 1.21.2'
   spec.add_dependency 'thor', '~> 1.1.0'
+  spec.add_dependency 'open_config', '~> 1.0'
 
   spec.add_development_dependency 'pry', '~> 0.13.1'
 end

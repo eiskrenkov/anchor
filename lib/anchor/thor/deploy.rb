@@ -118,7 +118,7 @@ module Anchor
             stage_configuration = Anchor.configuration.stages.send(stage)
             return stage_configuration if stage_configuration
 
-            abort "#{stage} environment is not configured in #{Anchor::DEPLOYMENT_CONFIGURATION_FILENAME}"
+            abort "#{stage} environment is not configured in #{Anchor::DEPLOYMENT_CONFIGURATION_FILE}"
           end
         end
       end

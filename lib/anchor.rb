@@ -2,14 +2,15 @@
 
 require_relative 'anchor/version'
 
-require_relative 'anchor/configuration'
 require_relative 'anchor/thor'
 require_relative 'anchor/cli'
 
+require 'open_config'
+
 module Anchor
-  DEPLOYMENT_CONFIGURATION_FILENAME = 'deploy.yml'
+  DEPLOYMENT_CONFIGURATION_FILE = 'deploy.yml'
 
   def self.configuration
-    @configuration ||= Configuration.new(DEPLOYMENT_CONFIGURATION_FILENAME)
+    @configuration ||= OpenConfig::YAML.new(file: DEPLOYMENT_CONFIGURATION_FILE)
   end
 end
