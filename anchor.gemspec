@@ -17,8 +17,6 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.required_ruby_version = Gem::Requirement.new('~> 3.0.0')
-
   # Anchor dependencies
   spec.add_dependency 'sshkit', '~> 1.21.2'
   spec.add_dependency 'thor', '~> 1.1.0'
