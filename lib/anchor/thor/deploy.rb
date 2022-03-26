@@ -19,8 +19,8 @@ module Anchor
         include SSHKit::DSL
 
         option :stage, required: true
-        option :build, type: :boolean, default: true
-        option :push, type: :boolean, default: true
+        option :build, type: :boolean, default: false
+        option :push, type: :boolean, default: false
         desc 'deploy [STAGE]', 'Deploy container to the specified stage'
         def deploy
           invoke 'anchor:build' if options[:build]
@@ -70,6 +70,26 @@ module Anchor
               Anchor::CLI::IO.say("#{stage.capitalize} deployed successfully!", color: :green)
             end
           end
+        end
+
+        option :stage, required: true
+        desc 'restart [STAGE]', 'Restart the container'
+        def restart
+          stage = options[:stage]
+          stage_configuration = fetch_stage_configuration(stage)
+
+          Anchor::CLI::IO.say("Restarting #{stage} container!", color: :red)
+
+          on "#{stage_configuration.user}@#{stage_configuration.host}" do
+            within Anchor.configuration.root do
+              docker_compose_base_command = ['docker-compose', '-f', stage_configuration.docker.compose.filename]
+
+              execute(*docker_compose_base_command, 'stop')
+              execute(*docker_compose_base_command, 'up', '--detach')
+            end
+          end
+
+          Anchor::CLI::IO.say("#{stage.capitalize} container restarted!")
         end
 
         option :stage, required: true
