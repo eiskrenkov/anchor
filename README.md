@@ -5,7 +5,7 @@ It builds your image using docker-compose, pushes it to the registry of your cho
 Install anchor on your machine as any other Ruby gem
 
 ```sh
-gem install anchor
+gem install anchor --source "https://rubygems.pkg.github.com/eiskrenkov"
 ```
 
 ## Usage

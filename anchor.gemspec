@@ -7,15 +7,15 @@ Gem::Specification.new do |spec|
   spec.version       = Anchor::VERSION
 
   spec.authors       = ['Egor Iskrenkov']
-  spec.email         = ['e.iskrenkov@gmail.com']
+  spec.email         = ['egor@iskrenkov.me']
 
   spec.summary       = 'The simplest way to deploy Docker images'
   spec.homepage      = 'https://github.com/eiskrenkov/anchor'
 
   spec.files         = Dir['lib/**/*.rb']
+  spec.require_paths = ['lib']
   spec.bindir        = 'bin'
   spec.executables   = spec.name
-  spec.require_paths = ['lib']
 
   spec.required_ruby_version = '>= 2.4'
 
