@@ -12,15 +12,15 @@ Gem::Specification.new do |spec|
   spec.summary       = 'The simplest way to deploy Docker images'
   spec.homepage      = 'https://github.com/eiskrenkov/anchor'
 
-  spec.files         = `git ls-files`.split($RS).reject { |f| f.match(%r{^spec/}) }
+  spec.files         = Dir['lib/**/*.rb']
   spec.bindir        = 'bin'
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  spec.executables   = 'console'
   spec.require_paths = ['lib']
 
+  spec.required_ruby_version = '>= 2.4'
+
   # Anchor dependencies
+  spec.add_dependency 'open_config', '~> 2.0'
   spec.add_dependency 'sshkit', '~> 1.21.2'
   spec.add_dependency 'thor', '~> 1.1.0'
-  spec.add_dependency 'open_config', '~> 2.0'
-
-  spec.add_development_dependency 'pry', '~> 0.13.1'
 end
