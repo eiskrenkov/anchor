@@ -11,6 +11,6 @@ module Anchor
   DEPLOYMENT_CONFIGURATION_FILE = 'deploy.yml'
 
   def self.configuration
-    @configuration ||= OpenConfig::YAML.new(file: DEPLOYMENT_CONFIGURATION_FILE)
+    @configuration ||= OpenConfig::YAML.new(DEPLOYMENT_CONFIGURATION_FILE)
   end
 end
