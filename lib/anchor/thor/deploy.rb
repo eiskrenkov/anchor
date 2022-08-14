@@ -11,6 +11,7 @@ module Anchor
       DOCKER_COMPOSE_DOWNLOAD_URL = 'https://github.com/docker/compose/releases/download/'
       DOCKER_COMPOSE_VERSION = '1.29.2'
 
+      DOCKER_COMPOSE_FILENAME = 'docker-compose.yml'
       REQUIRED_FILES = %w[
         .env
       ]
@@ -31,7 +32,7 @@ module Anchor
 
           Anchor::CLI::IO.say("Starting #{stage} deployment!")
 
-          invoke 'anchor:prepare_environment', options: { stage: stage }
+          invoke 'anchor:prepare', options: { stage: stage }
 
           on "#{stage_configuration.user}@#{stage_configuration.host}" do
             root = Anchor.configuration.root
@@ -42,7 +43,7 @@ module Anchor
             end
 
             within root do
-              (Anchor.configuration.required_files + REQUIRED_FILES).each do |filename|
+              (Anchor.configuration.fetch(:required_files, []) + REQUIRED_FILES).each do |filename|
                 if test("[[ -f #{root}/#{filename} ]]")
                   Anchor::CLI::IO.say("Found #{filename}", color: :green)
                 else
@@ -52,20 +53,18 @@ module Anchor
               end
 
               docker_compose_filename = stage_configuration.docker.compose.filename
-
-              if test("[[ -f #{root}/#{docker_compose_filename} ]]")
-                Anchor::CLI::IO.say("Removing old #{docker_compose_filename}", color: :yellow)
-                execute(:rm, docker_compose_filename)
-              end
-
               docker_compose_file_path = Anchor::CLI::Docker::Compose.file_path(docker_compose_filename)
 
               upload! docker_compose_file_path, root
+              execute('mv', docker_compose_filename, DOCKER_COMPOSE_FILENAME)
 
-              docker_compose_base_command = ['docker-compose', '-f', "#{root}/#{docker_compose_filename}"]
+              execute('docker-compose', 'stop')
 
-              execute(*docker_compose_base_command, 'stop')
-              execute(*docker_compose_base_command, 'up', '--detach')
+              if !(images_to_pull = stage_configuration.docker.compose.fetch(:pull, [])).empty?
+                execute('docker-compose', 'pull', *images_to_pull)
+              end
+
+              execute('docker-compose', 'up', '--detach')
 
               Anchor::CLI::IO.say("#{stage.capitalize} deployed successfully!", color: :green)
             end
@@ -82,10 +81,8 @@ module Anchor
 
           on "#{stage_configuration.user}@#{stage_configuration.host}" do
             within Anchor.configuration.root do
-              docker_compose_base_command = ['docker-compose', '-f', stage_configuration.docker.compose.filename]
-
-              execute(*docker_compose_base_command, 'stop')
-              execute(*docker_compose_base_command, 'up', '--detach')
+              execute('docker-compose', 'stop')
+              execute('docker-compose', 'up', '--detach')
             end
           end
 
@@ -93,8 +90,8 @@ module Anchor
         end
 
         option :stage, required: true
-        desc 'prepare_environment [STAGE]', 'Install required packages before deployment'
-        def prepare_environment
+        desc 'prepare [STAGE]', 'Install required packages before deployment'
+        def prepare
           stage = options[:stage]
           stage_configuration = fetch_stage_configuration(stage)
 
