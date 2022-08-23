@@ -10,11 +10,7 @@ module Anchor
 
       DOCKER_COMPOSE_DOWNLOAD_URL = 'https://github.com/docker/compose/releases/download/'
       DOCKER_COMPOSE_VERSION = '1.29.2'
-
       DOCKER_COMPOSE_FILENAME = 'docker-compose.yml'
-      REQUIRED_FILES = %w[
-        .env
-      ]
 
       commands do
         include SSHKit::DSL
@@ -22,6 +18,8 @@ module Anchor
         option :stage, required: true
         option :build, type: :boolean, default: false
         option :push, type: :boolean, default: false
+        option :bootstrap, type: :boolean, default: false
+
         desc 'deploy [STAGE]', 'Deploy container to the specified stage'
         def deploy
           invoke 'anchor:build' if options[:build]
@@ -32,26 +30,17 @@ module Anchor
 
           Anchor::CLI::IO.say("Starting #{stage} deployment!")
 
-          invoke 'anchor:prepare', options: { stage: stage }
+          invoke 'anchor:bootstrap', options: { stage: stage } if options[:bootstrap]
 
           on "#{stage_configuration.user}@#{stage_configuration.host}" do
             root = Anchor.configuration.root
 
             unless test("[[ -d #{root} ]]")
-              Anchor::CLI::IO.say("Root folder doesn't exists! Creating #{root}")
-              execute(:mkdir, root)
+              Anchor::CLI::IO.say("Root folder doesn't exists! Did you already run anchor bootstrap?", color: :red)
+              abort
             end
 
             within root do
-              (Anchor.configuration.fetch(:required_files, []) + REQUIRED_FILES).each do |filename|
-                if test("[[ -f #{root}/#{filename} ]]")
-                  Anchor::CLI::IO.say("Found #{filename}", color: :green)
-                else
-                  Anchor::CLI::IO.say("Couldn't find #{filename} file within #{root}!", color: :red)
-                  abort
-                end
-              end
-
               docker_compose_filename = stage_configuration.docker.compose.filename
               docker_compose_file_path = Anchor::CLI::Docker::Compose.file_path(docker_compose_filename)
 
@@ -72,6 +61,7 @@ module Anchor
         end
 
         option :stage, required: true
+
         desc 'restart [STAGE]', 'Restart the container'
         def restart
           stage = options[:stage]
@@ -90,14 +80,19 @@ module Anchor
         end
 
         option :stage, required: true
-        desc 'prepare [STAGE]', 'Install required packages before deployment'
-        def prepare
+
+        desc 'bootstrap [STAGE]', 'Install required packages before deployment'
+        def bootstrap
           stage = options[:stage]
           stage_configuration = fetch_stage_configuration(stage)
 
           Anchor::CLI::IO.say("Preparing #{stage} environment...")
 
           on "#{stage_configuration.user}@#{stage_configuration.host}" do
+            root = Anchor.configuration.root
+
+            execute(:mkdir, root) unless test("[[ -d #{root} ]]")
+
             if test('docker')
               version = capture('docker --version')
               Anchor::CLI::IO.say("Docker is installed! (#{version})", color: :green)
@@ -126,6 +121,16 @@ module Anchor
 
               execute("sudo curl -L #{docker_compose_download_url} -o /usr/local/bin/docker-compose")
               execute('sudo chmod +x /usr/local/bin/docker-compose')
+            end
+
+            if (bootstrap_configuration = stage_configuration[:bootstrap])
+              bootstrap_configuration.fetch(:scp, []).each do |file|
+                upload! file, root
+              end
+
+              bootstrap_configuration.fetch(:execute, '').split("\n").each do |command|
+                execute(command) unless command.empty?
+              end
             end
           end
         end
