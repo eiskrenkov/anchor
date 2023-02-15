@@ -41,11 +41,14 @@ module Anchor
             end
 
             within root do
-              docker_compose_filename = stage_configuration.docker.compose.filename
-              docker_compose_file_path = Anchor::CLI::Docker::Compose.file_path(docker_compose_filename)
+              docker_compose_filename = stage_configuration.dig(:docker, :compose, :filename) || DOCKER_COMPOSE_FILENAME
 
+              docker_compose_file_path = Anchor::CLI::Docker::Compose.file_path(docker_compose_filename)
               upload! docker_compose_file_path, root
-              execute('mv', docker_compose_filename, DOCKER_COMPOSE_FILENAME)
+
+              if docker_compose_filename != DOCKER_COMPOSE_FILENAME
+                execute('mv', docker_compose_filename, DOCKER_COMPOSE_FILENAME)
+              end
 
               execute('docker-compose', 'stop')
 
