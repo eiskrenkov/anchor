@@ -36,8 +36,8 @@ module Anchor
             root = Anchor.configuration.root
 
             unless test("[[ -d #{root} ]]")
-              Anchor::CLI::IO.say("Root folder doesn't exists! Did you already run anchor bootstrap?", color: :red)
-              abort
+              Anchor::CLI::IO.say("Root folder doesn't exists! Creating #{root}")
+              execute(:mkdir, root)
             end
 
             within root do
