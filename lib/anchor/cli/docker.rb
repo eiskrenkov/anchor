@@ -21,7 +21,7 @@ module Anchor
 
           def file_path(filename)
             File.join(Dir.pwd, filename).tap do |path|
-              raise FileNotFound unless File.exists?(path)
+              raise FileNotFound unless File.exist?(path)
             end
           end
 
